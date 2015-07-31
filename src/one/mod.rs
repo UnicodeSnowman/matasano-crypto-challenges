@@ -1,7 +1,6 @@
 extern crate rustc_serialize as serialize;
 
 use self::serialize::base64::{STANDARD, ToBase64};
-//use self::serialize::hex::{ToHex, FromHex, FromHexError};
 use self::serialize::hex::{ToHex, FromHex};
 use std::iter::Zip;
 use std::slice::Iter;
@@ -15,16 +14,7 @@ fn test_convert_hex_to_base64() {
                "SSdtIGtpbGxpbmcgeW91ciBicmFpbiBsaWtlIGEgcG9pc29ub3VzIG11c2hyb29t");
 }
 
-// -> Result<Vec<u8>, FromHexError> 
 pub fn convert_hex_to_base64(hex_string: &str) -> String {
-    // this 49276d206b696c6c696e6720796f757220627261696e206c696b65206120706f69736f6e6f7573206d757368726f6f6d
-    // should become SSdtIGtpbGxpbmcgeW91ciBicmFpbiBsaWtlIGEgcG9pc29ub3VzIG11c2hyb29t
-//    match hex_string.from_hex() {
-//        Ok(result) => println!("Hex to Base64: {}", result.to_base64(STANDARD)),
-//        Err(err) => println!("Oh Noes: {}", err)
-//    }
-
-    // TODO can we do this without the explicit unwrap?
     hex_string.from_hex().unwrap().to_base64(STANDARD)
 }
 
@@ -59,11 +49,11 @@ pub fn fixed_xor(hex_string_a: &str, hex_string_b: &str) -> String {
         hex_string_b.from_hex().unwrap()).to_hex()
 }
 
-#[test]
-fn test_single_bit_xor_cypher() {
-    single_bit_xor_cypher();
-    assert!(true);
-}
+//#[test]
+//fn test_single_bit_xor_cypher() {
+//    single_bit_xor_cypher();
+//    assert!(true);
+//}
 
 fn gen_letter_map() -> HashMap<char, usize> {
     let mut letter_map: HashMap<char, usize> = HashMap::new();
@@ -79,14 +69,15 @@ fn gen_letter_map() -> HashMap<char, usize> {
     letter_map
 }
 
-pub fn single_bit_xor_cypher() {
+
+pub fn single_bit_xor_cypher() -> (char, String) {
     let hex_string: &str = "1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736";
     let bytes: Vec<u8> = hex_string.from_hex().unwrap();
     let letter_map: HashMap<char, usize> = gen_letter_map();
 
     struct Winner {
         max: usize,
-        winner: char,
+        winner: char, // this could be Option so we don't have to default it to A
         secret: String
     }
 
@@ -120,6 +111,7 @@ pub fn single_bit_xor_cypher() {
         }
     });
 
-    println!("Score: {:?} Character: {:?} Secret: {:?}", result.max, result.winner, result.secret);
+    //println!("Score: {:?} Character: {:?} Secret: {:?}", result.max, result.winner, result.secret);
+    (result.winner, result.secret)
 }
 
