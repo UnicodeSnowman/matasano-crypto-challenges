@@ -86,16 +86,11 @@ pub fn single_bit_xor_cypher() {
 
     struct Winner {
         max: usize,
-        winner: char
+        winner: char,
+        secret: String
     }
 
-    // TODO "empty" char initialize?
-    let mut result = Winner { max: 0, winner: 'A' };
-
-    // TODO reduce of 0..255, returning new or existing Winner instead of mutating
-    //let test = (0..255).fold(0, |acc, i| acc + i);
-
-    for i in 0..255 {
+    let result: Winner = (0..255).fold(Winner { max: 0, winner: 'A', secret: "".to_string() }, |acc, i| {
         let byte = i as u8;
         let character = i as u8 as char;
 
@@ -105,7 +100,7 @@ pub fn single_bit_xor_cypher() {
         // can't just unwrap xored_string, some of the potential values are `Err` types,
         // so we match over it to only bother with the `Ok` values
         let score: usize = match xored_string {
-            Ok(text) => {
+            Ok(ref text) => {
                 text.chars().fold(0, |acc, c| {
                     if letter_map.contains_key(&c) {
                         acc + letter_map.get(&c).unwrap()
@@ -114,14 +109,17 @@ pub fn single_bit_xor_cypher() {
                     }
                 })
             },
-            Err(err) => 0
+            Err(_) => 0
         };
 
-        if score > result.max {
-            result = Winner { max: score, winner: character }
+        if score > acc.max {
+            // we know if we get here, we have a valid string, so we can safely call unwrap
+            Winner { max: score, winner: character, secret: xored_string.unwrap() }
+        } else {
+            acc
         }
-    }
+    });
 
-    println!("Score: {:?} Character: {:?}", result.max, result.winner);
+    println!("Score: {:?} Character: {:?} Secret: {:?}", result.max, result.winner, result.secret);
 }
 
