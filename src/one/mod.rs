@@ -5,6 +5,9 @@ use self::serialize::hex::{ToHex, FromHex};
 use std::iter::Zip;
 use std::slice::Iter;
 use std::collections::HashMap;
+use std::io;
+use std::io::prelude::*;
+use std::fs::File;
 
 #[test]
 fn test_convert_hex_to_base64() {
@@ -69,17 +72,16 @@ fn gen_letter_map() -> HashMap<char, usize> {
     letter_map
 }
 
+pub struct Winner {
+    max: usize,
+    winner: char, // this could be Option so we don't have to default it to A
+    pub secret: String
+}
 
-pub fn single_bit_xor_cypher() -> (char, String) {
-    let hex_string: &str = "1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736";
+//pub fn single_bit_xor_cypher(hex_string: &str) -> (char, String) {
+pub fn single_bit_xor_cypher(hex_string: &str) -> Winner {
     let bytes: Vec<u8> = hex_string.from_hex().unwrap();
     let letter_map: HashMap<char, usize> = gen_letter_map();
-
-    struct Winner {
-        max: usize,
-        winner: char, // this could be Option so we don't have to default it to A
-        secret: String
-    }
 
     let result: Winner = (0..255).fold(Winner { max: 0, winner: 'A', secret: "".to_string() }, |acc, i| {
         let byte = i as u8;
@@ -112,6 +114,26 @@ pub fn single_bit_xor_cypher() -> (char, String) {
     });
 
     //println!("Score: {:?} Character: {:?} Secret: {:?}", result.max, result.winner, result.secret);
-    (result.winner, result.secret)
+    result
+}
+
+pub fn detect_single_character_xor() -> io::Result<Winner> {
+    let mut file_string = String::new();
+
+    // full path... how to open file in local directory?
+    let mut file = try!(File::open("/Users/captop/Development/rust/matasano-crypto-challenges/src/4.txt"));
+    try!(file.read_to_string(&mut file_string));
+    let lines: Vec<&str> = file_string.split("\n").collect();
+
+    let winner: Winner = lines.iter().fold(Winner { max: 0, winner: 'A', secret: "".to_string() }, |acc, line| {
+        let new_line = single_bit_xor_cypher(line);
+        if new_line.max > acc.max {
+            new_line
+        } else {
+            acc
+        }
+    });
+
+    Ok(winner)
 }
 

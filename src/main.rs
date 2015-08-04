@@ -12,5 +12,13 @@ fn main() {
     //one::fixed_xor();
 
     println!("{}", "================");
-    one::single_bit_xor_cypher();
+    let hex_string: &str = "1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736";
+    //one::single_bit_xor_cypher(hex_string);
+    
+    println!("{}", "================");
+    let winner = one::detect_single_character_xor();
+    match winner {
+        Ok(w) => println!("WINNAR {:?}", w.secret),
+        Err(err) => println!("oh noes, you lose {:?}", err)
+    }
 }
