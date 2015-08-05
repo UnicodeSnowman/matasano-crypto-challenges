@@ -25,11 +25,11 @@ pub fn convert_hex_to_base64(hex_string: &str) -> String {
 fn test_fixed_xor() {
     let hex_string_a = "1c0111001f010100061a024b53535009181c";
     let hex_string_b = "686974207468652062756c6c277320657965";
-    let res = fixed_xor(hex_string_a, hex_string_b);
+    let res = fixed_xor(&hex_string_a, &hex_string_b);
     assert_eq!(res, "746865206b696420646f6e277420706c6179");
 }
 
-fn xor(vec_a: Vec<u8>, vec_b: Vec<u8>) -> Vec<u8> {
+fn xor(vec_a: &Vec<u8>, vec_b: &Vec<u8>) -> Vec<u8> {
     let zipped: Zip<Iter<u8>, Iter<u8>> = vec_a.iter().zip(vec_b.iter());
     zipped.map(|(&a, &b)| a^b).collect()
 }
@@ -48,15 +48,9 @@ pub fn fixed_xor(hex_string_a: &str, hex_string_b: &str) -> String {
     // 746865206b696420646f6e277420706c6179
 
     // TODO can we do this without the explicit unwrap?
-    xor(hex_string_a.from_hex().unwrap(), 
-        hex_string_b.from_hex().unwrap()).to_hex()
+    xor(&hex_string_a.from_hex().unwrap(), 
+        &hex_string_b.from_hex().unwrap()).to_hex()
 }
-
-//#[test]
-//fn test_single_bit_xor_cypher() {
-//    single_bit_xor_cypher();
-//    assert!(true);
-//}
 
 fn gen_letter_map() -> HashMap<char, usize> {
     let mut letter_map: HashMap<char, usize> = HashMap::new();
@@ -78,7 +72,6 @@ pub struct Winner {
     pub secret: String
 }
 
-//pub fn single_bit_xor_cypher(hex_string: &str) -> (char, String) {
 pub fn single_bit_xor_cypher(hex_string: &str) -> Winner {
     let bytes: Vec<u8> = hex_string.from_hex().unwrap();
     let letter_map: HashMap<char, usize> = gen_letter_map();
@@ -119,14 +112,12 @@ pub fn single_bit_xor_cypher(hex_string: &str) -> Winner {
 
 pub fn detect_single_character_xor() -> io::Result<Winner> {
     let mut file_string = String::new();
-
-    // full path... how to open file in local directory?
-    let mut file = try!(File::open("/Users/captop/Development/rust/matasano-crypto-challenges/src/4.txt"));
+    let mut file = try!(File::open("assets/4.txt"));
     try!(file.read_to_string(&mut file_string));
     let lines: Vec<&str> = file_string.split("\n").collect();
 
     let winner: Winner = lines.iter().fold(Winner { max: 0, winner: 'A', secret: "".to_string() }, |acc, line| {
-        let new_line = single_bit_xor_cypher(line);
+        let new_line = single_bit_xor_cypher(&line);
         if new_line.max > acc.max {
             new_line
         } else {
@@ -135,5 +126,26 @@ pub fn detect_single_character_xor() -> io::Result<Winner> {
     });
 
     Ok(winner)
+}
+
+pub fn repeating_key_xor() {
+    let ice_bytes: Vec<u8> = "ICE".bytes().collect();
+    let crypto_bytes: Vec<u8> = 
+        "Burning 'em, if you ain't quick and nimble I go crazy when I hear a cymbal"
+            .bytes().collect();
+
+    let padded: Vec<char> = crypto_bytes.iter().fold(vec!(), |acc, _| {
+        let last: Option<&char> = acc.last();
+        match last {
+            Some(&'I') => vec!('C'),
+            Some(&'C') => vec!('E'),
+            Some(&'E') => vec!('I'),
+            None => vec!('I'),
+            _ => vec!('I')
+        }
+    });
+
+    //let res = xor(&crypto_bytes, &ice_bytes);
+    println!("{:?}", padded);
 }
 
