@@ -68,7 +68,7 @@ fn gen_letter_map() -> HashMap<char, usize> {
 
 pub struct Winner {
     max: usize,
-    winner: char, // this could be Option so we don't have to default it to A
+    //winner: char, // this could be Option so we don't have to default it to A
     pub secret: String
 }
 
@@ -76,9 +76,9 @@ pub fn single_bit_xor_cypher(hex_string: &str) -> Winner {
     let bytes: Vec<u8> = hex_string.from_hex().unwrap();
     let letter_map: HashMap<char, usize> = gen_letter_map();
 
-    let result: Winner = (0..255).fold(Winner { max: 0, winner: 'A', secret: "".to_string() }, |acc, i| {
+    let result: Winner = (0..255).fold(Winner { max: 0, secret: "".to_string() }, |acc, i| {
         let byte = i as u8;
-        let character = i as u8 as char;
+        //let character = i as u8 as char;
 
         let xored_bytes: Vec<u8> = bytes.iter().map(|&a| a^byte).collect();
         let xored_string = String::from_utf8(xored_bytes);
@@ -100,7 +100,7 @@ pub fn single_bit_xor_cypher(hex_string: &str) -> Winner {
 
         if score > acc.max {
             // we know if we get here, we have a valid string, so we can safely call unwrap
-            Winner { max: score, winner: character, secret: xored_string.unwrap() }
+            Winner { max: score, secret: xored_string.unwrap() }
         } else {
             acc
         }
@@ -116,7 +116,7 @@ pub fn detect_single_character_xor() -> io::Result<Winner> {
     try!(file.read_to_string(&mut file_string));
     let lines: Vec<&str> = file_string.split("\n").collect();
 
-    let winner: Winner = lines.iter().fold(Winner { max: 0, winner: 'A', secret: "".to_string() }, |acc, line| {
+    let winner: Winner = lines.iter().fold(Winner { max: 0, secret: "".to_string() }, |acc, line| {
         let new_line = single_bit_xor_cypher(&line);
         if new_line.max > acc.max {
             new_line
@@ -128,24 +128,23 @@ pub fn detect_single_character_xor() -> io::Result<Winner> {
     Ok(winner)
 }
 
-pub fn repeating_key_xor() {
-    let ice_bytes: Vec<u8> = "ICE".bytes().collect();
-    let crypto_bytes: Vec<u8> = 
-        "Burning 'em, if you ain't quick and nimble I go crazy when I hear a cymbal"
-            .bytes().collect();
+pub fn repeating_key_xor(string: &str) -> String {
+    let crypto_bytes: Vec<u8> = string.bytes().collect();
 
-    let padded: Vec<char> = crypto_bytes.iter().fold(vec!(), |acc, _| {
-        let last: Option<&char> = acc.last();
-        match last {
-            Some(&'I') => vec!('C'),
-            Some(&'C') => vec!('E'),
-            Some(&'E') => vec!('I'),
-            None => vec!('I'),
-            _ => vec!('I')
-        }
-    });
+    let mut xored_bytes: Vec<u8> = vec!();
 
-    //let res = xor(&crypto_bytes, &ice_bytes);
-    println!("{:?}", padded);
+    // map with index? I should try writing a utility map_with_index
+    // using reduce... TODO
+    for (i, &b) in crypto_bytes.iter().enumerate() {
+        let character_byte = match i % 3 {
+            0 => b'I',
+            1 => b'C',
+            2 => b'E',
+            _ => panic!("whoops")
+        };
+        xored_bytes.push(character_byte^b);
+    }
+
+    xored_bytes.to_hex()
 }
 

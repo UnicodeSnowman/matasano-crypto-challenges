@@ -12,7 +12,7 @@ fn main() {
     //one::fixed_xor();
 
     println!("{}", "================");
-    let hex_string: &str = "1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736";
+    //let hex_string: &str = "1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736";
     //one::single_bit_xor_cypher(&hex_string);
 
     println!("{}", "================");
@@ -23,5 +23,6 @@ fn main() {
     }
 
     println!("{}", "================");
-    one::repeating_key_xor();
+    let xored_string = one::repeating_key_xor("Burning 'em, if you ain't quick and nimble I go crazy when I hear a cymbal");
+    println!("{:?}", xored_string);
 }
