@@ -1,4 +1,5 @@
 extern crate rustc_serialize as serialize;
+mod break_repeating_key_xor;
 
 use self::serialize::base64::{STANDARD, ToBase64};
 use self::serialize::hex::{ToHex, FromHex};
@@ -8,6 +9,7 @@ use std::collections::HashMap;
 use std::io;
 use std::io::prelude::*;
 use std::fs::File;
+use self::break_repeating_key_xor::{compute_hamming_distance};
 
 #[test]
 fn test_convert_hex_to_base64() {
@@ -130,7 +132,6 @@ pub fn detect_single_character_xor() -> io::Result<Winner> {
 
 pub fn repeating_key_xor(string: &str) -> String {
     let crypto_bytes: Vec<u8> = string.bytes().collect();
-
     let mut xored_bytes: Vec<u8> = vec!();
 
     // map with index? I should try writing a utility map_with_index
@@ -140,11 +141,24 @@ pub fn repeating_key_xor(string: &str) -> String {
             0 => b'I',
             1 => b'C',
             2 => b'E',
-            _ => panic!("whoops")
+            _ => panic!("THIS IS IMPOSSIBLE")
         };
         xored_bytes.push(character_byte^b);
     }
 
     xored_bytes.to_hex()
 }
+
+pub fn decrypto() -> u32 {
+    compute_hamming_distance("this is a test", "wokka wokka!!!")
+}
+
+// how to make this work?
+//fn open_file(path: &str) -> io::Result<Vec<&str>> {
+//    let mut file_string = String::new();
+//    let mut file = try!(File::open(path));
+//    try!(file.read_to_string(&mut file_string));
+//    Ok(file_string.split("\n").collect())
+//}
+
 
