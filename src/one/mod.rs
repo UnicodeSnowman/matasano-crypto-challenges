@@ -113,9 +113,7 @@ pub fn single_bit_xor_cypher(hex_string: &str) -> Winner {
 }
 
 pub fn detect_single_character_xor() -> io::Result<Winner> {
-    let mut file_string = String::new();
-    let mut file = try!(File::open("assets/4.txt"));
-    try!(file.read_to_string(&mut file_string));
+    let file_string = open_file("assets/4.txt").unwrap();
     let lines: Vec<&str> = file_string.split("\n").collect();
 
     let winner: Winner = lines.iter().fold(Winner { max: 0, secret: "".to_string() }, |acc, line| {
@@ -150,15 +148,26 @@ pub fn repeating_key_xor(string: &str) -> String {
 }
 
 pub fn decrypto() -> u32 {
+    let file_string: String = open_file("assets/6.txt").unwrap();
+    let file_bytes: Vec<u8> = file_string.bytes().collect();
+    //let lines: Vec<&str> = file_string.split("\n").collect();
+    // TODO do we need to split on/remove \n's?
+    //let lines: Vec<&str> = file_string.split("\n").collect();
+
+    for keysize in 2..41 {
+        let ex = file_bytes.chunks(keysize).take(2);
+//        for val in file_bytes.chunks(keysize).take(2) {
+//            println!("{:?}", val);
+//        }
+    }
     compute_hamming_distance("this is a test", "wokka wokka!!!")
 }
 
-// how to make this work?
-//fn open_file(path: &str) -> io::Result<Vec<&str>> {
-//    let mut file_string = String::new();
-//    let mut file = try!(File::open(path));
-//    try!(file.read_to_string(&mut file_string));
-//    Ok(file_string.split("\n").collect())
-//}
+fn open_file(path: &str) -> io::Result<String> {
+    let mut file_string = String::new();
+    let mut file = try!(File::open(path));
+    try!(file.read_to_string(&mut file_string));
+    Ok(file_string)
+}
 
 
