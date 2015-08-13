@@ -1,7 +1,7 @@
 extern crate rustc_serialize as serialize;
 mod break_repeating_key_xor;
 
-use self::serialize::base64::{STANDARD, ToBase64};
+use self::serialize::base64::{STANDARD, FromBase64, ToBase64};
 use self::serialize::hex::{ToHex, FromHex};
 use std::iter::Zip;
 use std::slice::Iter;
@@ -147,20 +147,61 @@ pub fn repeating_key_xor(string: &str) -> String {
     xored_bytes.to_hex()
 }
 
-pub fn decrypto() -> u32 {
+pub fn break_into(keysize: usize) {
     let file_string: String = open_file("assets/6.txt").unwrap();
     let file_bytes: Vec<u8> = file_string.bytes().collect();
-    //let lines: Vec<&str> = file_string.split("\n").collect();
-    // TODO do we need to split on/remove \n's?
-    //let lines: Vec<&str> = file_string.split("\n").collect();
+    let file_base64 = file_bytes.from_base64().unwrap();
+    let mut chunks = file_base64.chunks(keysize);
+
+    let mut vec_thing: Vec<u8> = vec!();
+    let mut i = 0;
+
+    // size of chunks
+    let n = chunks.len();
+
+    // transpose, create another block out of first byte of each block,
+    // another block out of second byte of each block, etc.
+    for block in chunks {
+        let vec = block.to_vec();
+        vec_thing.push(vec[3]);
+    }
+    let res = single_bit_xor_cypher(&vec_thing.to_hex());
+    println!("{:?}", res.secret);
+}
+
+pub fn decrypto() -> usize {
+    let file_string: String = open_file("assets/6.txt").unwrap();
+    let file_bytes: Vec<u8> = file_string.bytes().collect();
+    let file_base64 = file_bytes.from_base64().unwrap();
+
+    // FIXME this sucks, could probably `fold` over 2..41
+    // to get rid of mutable vars
+    let mut score_max: f32 = 100 as f32;
+    let mut keysize_max = 0;
 
     for keysize in 2..41 {
-        let ex = file_bytes.chunks(keysize).take(2);
-//        for val in file_bytes.chunks(keysize).take(2) {
-//            println!("{:?}", val);
-//        }
+        let mut sum: u32 = 0;
+        let mut count: u32 = 0;
+        let mut chunks = file_base64.chunks(keysize).peekable();
+
+        while !chunks.peek().is_none() {
+            let (one, two) = (chunks.next(), chunks.next());
+            if one.is_some() && two.is_some() {
+                let res = compute_hamming_distance(&one.unwrap().to_vec(), &two.unwrap().to_vec());
+                count += 1;
+                sum += res;
+            }
+        }
+
+        let avg: f32 = (sum as f32)/(count as f32);
+        let score = avg/(keysize as f32);
+
+        if score < score_max {
+            score_max = score;
+            keysize_max = keysize;
+        }
     }
-    compute_hamming_distance("this is a test", "wokka wokka!!!")
+    keysize_max
 }
 
 fn open_file(path: &str) -> io::Result<String> {
