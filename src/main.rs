@@ -21,6 +21,5 @@ fn main() {
 //    let xored_string = one::repeating_key_xor("Burning 'em, if you ain't quick and nimble I go crazy when I hear a cymbal");
 //    println!("{:?}", xored_string);
 
-    let keysize = one::decrypto();
-    one::break_into(keysize);
+    one::decrypto();
 }

@@ -147,29 +147,7 @@ pub fn repeating_key_xor(string: &str) -> String {
     xored_bytes.to_hex()
 }
 
-pub fn break_into(keysize: usize) {
-    let file_string: String = open_file("assets/6.txt").unwrap();
-    let file_bytes: Vec<u8> = file_string.bytes().collect();
-    let file_base64 = file_bytes.from_base64().unwrap();
-    let mut chunks = file_base64.chunks(keysize);
-
-    let mut vec_thing: Vec<u8> = vec!();
-    let mut i = 0;
-
-    // size of chunks
-    let n = chunks.len();
-
-    // transpose, create another block out of first byte of each block,
-    // another block out of second byte of each block, etc.
-    for block in chunks {
-        let vec = block.to_vec();
-        vec_thing.push(vec[3]);
-    }
-    let res = single_bit_xor_cypher(&vec_thing.to_hex());
-    println!("{:?}", res.secret);
-}
-
-pub fn decrypto() -> usize {
+pub fn decrypto() {
     let file_string: String = open_file("assets/6.txt").unwrap();
     let file_bytes: Vec<u8> = file_string.bytes().collect();
     let file_base64 = file_bytes.from_base64().unwrap();
@@ -201,7 +179,26 @@ pub fn decrypto() -> usize {
             keysize_max = keysize;
         }
     }
-    keysize_max
+
+    let mut chunks = file_base64.chunks(keysize_max);
+    let mut hash_map: HashMap<usize, Vec<u8>> = HashMap::new();
+
+    // transpose, create another block out of first byte of each block,
+    // another block out of second byte of each block, etc.
+    for (i, block) in chunks.enumerate() {
+        for byte in block {
+            if hash_map.is_empty() {
+                hash_map.insert(i, vec!(*byte));
+            } else {
+                let mut v = hash_map.get(&i).unwrap();
+//                let mut c = v.clone();
+//                c.push(*byte);
+//                hash_map.insert(i, c);
+            }
+        }
+    }
+    //let res = single_bit_xor_cypher(&vec_thing.to_hex());
+    println!("{:?}", hash_map);
 }
 
 fn open_file(path: &str) -> io::Result<String> {
