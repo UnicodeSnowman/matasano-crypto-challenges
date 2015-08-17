@@ -70,17 +70,16 @@ fn gen_letter_map() -> HashMap<char, usize> {
 
 pub struct Winner {
     max: usize,
-    //winner: char, // this could be Option so we don't have to default it to A
+    pub key: char, // this could be Option so we don't have to default it to A
     pub secret: String
 }
 
-pub fn single_bit_xor_cypher(hex_string: &str) -> Winner {
-    let bytes: Vec<u8> = hex_string.from_hex().unwrap();
+pub fn single_bit_xor_cypher(bytes: &Vec<u8>) -> Winner {
     let letter_map: HashMap<char, usize> = gen_letter_map();
 
-    let result: Winner = (0..255).fold(Winner { max: 0, secret: "".to_string() }, |acc, i| {
+    let result: Winner = (0..255).fold(Winner { max: 0, key: 'A', secret: "".to_string() }, |acc, i| {
         let byte = i as u8;
-        //let character = i as u8 as char;
+        let character = i as u8 as char;
 
         let xored_bytes: Vec<u8> = bytes.iter().map(|&a| a^byte).collect();
         let xored_string = String::from_utf8(xored_bytes);
@@ -102,22 +101,23 @@ pub fn single_bit_xor_cypher(hex_string: &str) -> Winner {
 
         if score > acc.max {
             // we know if we get here, we have a valid string, so we can safely call unwrap
-            Winner { max: score, secret: xored_string.unwrap() }
+            Winner { max: score, key: character, secret: xored_string.unwrap() }
         } else {
             acc
         }
     });
 
-    //println!("Score: {:?} Character: {:?} Secret: {:?}", result.max, result.winner, result.secret);
     result
+
 }
 
 pub fn detect_single_character_xor() -> io::Result<Winner> {
     let file_string = open_file("assets/4.txt").unwrap();
     let lines: Vec<&str> = file_string.split("\n").collect();
 
-    let winner: Winner = lines.iter().fold(Winner { max: 0, secret: "".to_string() }, |acc, line| {
-        let new_line = single_bit_xor_cypher(&line);
+    let winner: Winner = lines.iter().fold(Winner { max: 0, key: 'A', secret: "".to_string() }, |acc, line| {
+        let bytes: Vec<u8> = line.from_hex().unwrap();
+        let new_line = single_bit_xor_cypher(&bytes);
         if new_line.max > acc.max {
             new_line
         } else {
@@ -128,19 +128,14 @@ pub fn detect_single_character_xor() -> io::Result<Winner> {
     Ok(winner)
 }
 
-pub fn repeating_key_xor(string: &str) -> String {
-    let crypto_bytes: Vec<u8> = string.bytes().collect();
-    let mut xored_bytes: Vec<u8> = vec!();
+pub fn repeating_key_xor(bytes: &Vec<u8>, key: &Vec<u8>) -> String {
+    let mut xored_bytes: Vec<u8> = Vec::new();
+    let key_length = key.len();
 
     // map with index? I should try writing a utility map_with_index
     // using reduce... TODO
-    for (i, &b) in crypto_bytes.iter().enumerate() {
-        let character_byte = match i % 3 {
-            0 => b'I',
-            1 => b'C',
-            2 => b'E',
-            _ => panic!("THIS IS IMPOSSIBLE")
-        };
+    for (i, &b) in bytes.iter().enumerate() {
+        let character_byte = key[i % key_length];
         xored_bytes.push(character_byte^b);
     }
 
@@ -149,18 +144,20 @@ pub fn repeating_key_xor(string: &str) -> String {
 
 pub fn decrypto() {
     let file_string: String = open_file("assets/6.txt").unwrap();
-    let file_bytes: Vec<u8> = file_string.bytes().collect();
-    let file_base64 = file_bytes.from_base64().unwrap();
+    let file_bytes: Vec<u8> = file_string.from_base64().unwrap();
 
-    // FIXME this sucks, could probably `fold` over 2..41
-    // to get rid of mutable vars
-    let mut score_max: f32 = 100 as f32;
-    let mut keysize_max = 0;
+    // FIXME this kinda sucks, could probably `fold` over 2..41 range
+    // to get rid of these mutable vars
+//    let res = (2..41).fold((f32::NAN, 2), |acc, v| {
+//
+//    });
+    let mut score_min: f32 = 100 as f32;
+    let mut keysize = 0;
 
-    for keysize in 2..41 {
+    for ks in 2..41 {
         let mut sum: u32 = 0;
         let mut count: u32 = 0;
-        let mut chunks = file_base64.chunks(keysize).peekable();
+        let mut chunks = file_bytes.chunks(ks).peekable();
 
         while !chunks.peek().is_none() {
             let (one, two) = (chunks.next(), chunks.next());
@@ -171,34 +168,44 @@ pub fn decrypto() {
             }
         }
 
-        let avg: f32 = (sum as f32)/(count as f32);
-        let score = avg/(keysize as f32);
+        let avg: f32 = (sum as f32) / (count as f32);
+        let score = avg / (ks as f32);
 
-        if score < score_max {
-            score_max = score;
-            keysize_max = keysize;
+        if score < score_min {
+            score_min = score;
+            keysize = ks;
         }
     }
 
-    let mut chunks = file_base64.chunks(keysize_max);
-    let mut hash_map: HashMap<usize, Vec<u8>> = HashMap::new();
+    let mut transposed_blocks: HashMap<usize, Vec<u8>> = HashMap::new();
 
     // transpose, create another block out of first byte of each block,
     // another block out of second byte of each block, etc.
-    for (i, block) in chunks.enumerate() {
-        for byte in block {
-            if hash_map.is_empty() {
-                hash_map.insert(i, vec!(*byte));
+    // 29 66 31 77 11 15 2 31
+    // 54 0 30 1
+    // 60 12 30 8
+    for block in file_bytes.chunks(keysize) {
+        for (i, byte) in block.iter().enumerate() {
+            if transposed_blocks.contains_key(&i) {
+                if let Some(vec) = transposed_blocks.get_mut(&i) {
+                    vec.push(*byte);
+                }
             } else {
-                let mut v = hash_map.get(&i).unwrap();
-//                let mut c = v.clone();
-//                c.push(*byte);
-//                hash_map.insert(i, c);
+                transposed_blocks.insert(i, vec!(*byte));
             }
         }
     }
-    //let res = single_bit_xor_cypher(&vec_thing.to_hex());
-    println!("{:?}", hash_map);
+
+    let key: Vec<u8> = transposed_blocks.values().map(|block| {
+        let cypher_result = single_bit_xor_cypher(&block);
+        cypher_result.key as u8
+    }).collect();
+
+//    let st = String::from_utf8(key);
+//    println!("{:?}", st);
+
+    //let bytes: Vec<u8> = repeating_key_xor(&file_bytes, &key).from_hex().unwrap();
+    //let xored_string = String::from_utf8(bytes).unwrap();
 }
 
 fn open_file(path: &str) -> io::Result<String> {
@@ -207,5 +214,4 @@ fn open_file(path: &str) -> io::Result<String> {
     try!(file.read_to_string(&mut file_string));
     Ok(file_string)
 }
-
 

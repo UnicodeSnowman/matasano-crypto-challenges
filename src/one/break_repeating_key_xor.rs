@@ -1,6 +1,4 @@
 extern crate rustc_serialize as serialize;
-use self::serialize::hex::{ToHex};
-use self::serialize::base64::{STANDARD, ToBase64};
 
 use std::iter::Zip;
 use std::slice::Iter;
