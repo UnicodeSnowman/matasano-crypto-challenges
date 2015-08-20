@@ -89,8 +89,8 @@ pub fn single_bit_xor_cypher(bytes: &Vec<u8>) -> Winner {
         let score: usize = match xored_string {
             Ok(ref text) => {
                 text.chars().fold(0, |acc, c| {
-                    if letter_map.contains_key(&c) {
-                        acc + letter_map.get(&c).unwrap()
+                    if let Some(letter) = letter_map.get(&c) {
+                        acc + letter
                     } else {
                         acc
                     }
@@ -142,7 +142,7 @@ pub fn repeating_key_xor(bytes: &Vec<u8>, key: &Vec<u8>) -> String {
     xored_bytes.to_hex()
 }
 
-pub fn decrypto() {
+pub fn decrypto() -> String {
     let file_string: String = open_file("assets/6.txt").unwrap();
     let file_bytes: Vec<u8> = file_string.from_base64().unwrap();
 
@@ -181,9 +181,6 @@ pub fn decrypto() {
 
     // transpose, create another block out of first byte of each block,
     // another block out of second byte of each block, etc.
-    // 29 66 31 77 11 15 2 31
-    // 54 0 30 1
-    // 60 12 30 8
     for block in file_bytes.chunks(keysize) {
         for (i, byte) in block.iter().enumerate() {
             if transposed_blocks.contains_key(&i) {
@@ -196,16 +193,17 @@ pub fn decrypto() {
         }
     }
 
-    let key: Vec<u8> = transposed_blocks.values().map(|block| {
-        let cypher_result = single_bit_xor_cypher(&block);
-        cypher_result.key as u8
+    let key: Vec<u8> = (0..keysize).map(|i| {
+        let char_key = match transposed_blocks.get(&i) {
+            Some(block) => single_bit_xor_cypher(&block).key,
+            None => panic!("Unable to decrypt single bit key") // better way to handle this?
+        };
+
+        char_key as u8
     }).collect();
 
-//    let st = String::from_utf8(key);
-//    println!("{:?}", st);
-
-    //let bytes: Vec<u8> = repeating_key_xor(&file_bytes, &key).from_hex().unwrap();
-    //let xored_string = String::from_utf8(bytes).unwrap();
+    let bytes: Vec<u8> = repeating_key_xor(&file_bytes, &key).from_hex().unwrap();
+    String::from_utf8(bytes).unwrap()
 }
 
 fn open_file(path: &str) -> io::Result<String> {
