@@ -142,7 +142,7 @@ pub fn repeating_key_xor(bytes: &Vec<u8>, key: &Vec<u8>) -> String {
     xored_bytes.to_hex()
 }
 
-pub fn decrypto() -> String {
+pub fn break_repeating_key_xor() -> String {
     let file_string: String = open_file("assets/6.txt").unwrap();
     let file_bytes: Vec<u8> = file_string.from_base64().unwrap();
 
@@ -204,6 +204,10 @@ pub fn decrypto() -> String {
 
     let bytes: Vec<u8> = repeating_key_xor(&file_bytes, &key).from_hex().unwrap();
     String::from_utf8(bytes).unwrap()
+}
+
+pub fn aes_in_ecb_mode() {
+
 }
 
 fn open_file(path: &str) -> io::Result<String> {

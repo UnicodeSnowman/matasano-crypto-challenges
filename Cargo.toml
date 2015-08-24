@@ -6,4 +6,5 @@ include = ["assets/**/*"]
 
 [dependencies]
 rustc-serialize = "0.3"
+openssl = "0.6.4"
 
