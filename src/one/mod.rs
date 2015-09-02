@@ -1,4 +1,5 @@
 extern crate rustc_serialize as serialize;
+extern crate openssl;
 mod break_repeating_key_xor;
 
 use self::serialize::base64::{STANDARD, FromBase64, ToBase64};
@@ -10,6 +11,8 @@ use std::io;
 use std::io::prelude::*;
 use std::fs::File;
 use self::break_repeating_key_xor::{compute_hamming_distance};
+use self::openssl::crypto::symm::Type::{AES_128_ECB};
+use self::openssl::crypto::symm::{decrypt};
 
 #[test]
 fn test_convert_hex_to_base64() {
@@ -207,7 +210,16 @@ pub fn break_repeating_key_xor() -> String {
 }
 
 pub fn aes_in_ecb_mode() {
+    let file_string: String = open_file("assets/7.txt").unwrap();
+    let file_bytes: Vec<u8> = file_string.from_base64().unwrap();
+    let key: Vec<u8> = "YELLOW SUBMARINE".bytes().collect();
 
+    // I guess the iv is just ignored here for ECB?
+    let iv: Vec<u8> = "BOGUS".bytes().collect();
+
+    let res = decrypt(AES_128_ECB, &key, &iv, &file_bytes);
+    let s = String::from_utf8(res).unwrap();
+    println!("{:?}", s);
 }
 
 fn open_file(path: &str) -> io::Result<String> {
