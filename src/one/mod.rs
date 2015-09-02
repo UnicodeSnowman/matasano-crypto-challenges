@@ -209,17 +209,20 @@ pub fn break_repeating_key_xor() -> String {
     String::from_utf8(bytes).unwrap()
 }
 
-pub fn aes_in_ecb_mode() {
+pub fn aes_in_ecb_mode() -> Vec<u8> {
     let file_string: String = open_file("assets/7.txt").unwrap();
     let file_bytes: Vec<u8> = file_string.from_base64().unwrap();
     let key: Vec<u8> = "YELLOW SUBMARINE".bytes().collect();
 
-    // I guess the iv is just ignored here for ECB?
+    // I guess the iv is just ignored here for ECB, since it 
+    // is stateless and doesn't require an iv
     let iv: Vec<u8> = "BOGUS".bytes().collect();
 
-    let res = decrypt(AES_128_ECB, &key, &iv, &file_bytes);
-    let s = String::from_utf8(res).unwrap();
-    println!("{:?}", s);
+    decrypt(AES_128_ECB, &key, &iv, &file_bytes)
+}
+
+pub fn detect_aes_in_ecb_mode() {
+
 }
 
 fn open_file(path: &str) -> io::Result<String> {
