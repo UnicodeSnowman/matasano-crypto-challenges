@@ -222,7 +222,18 @@ pub fn aes_in_ecb_mode() -> Vec<u8> {
 }
 
 pub fn detect_aes_in_ecb_mode() {
+    let file_string: String = open_file("assets/8.txt").unwrap();
+    let ciphertexts: Vec<Vec<u8>> = file_string
+                                .split("\n")
+                                .map(|line| line.from_hex().unwrap())
+                                .collect();
 
+    // can we fix this n^2 crap?
+    for ciphertext in ciphertexts {
+        for chunk in ciphertext.chunks(16) {
+            println!("{:?}", chunk);
+        }
+    }
 }
 
 fn open_file(path: &str) -> io::Result<String> {

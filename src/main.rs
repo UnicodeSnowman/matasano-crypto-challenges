@@ -30,5 +30,5 @@ fn main() {
 //    two::pad_pkcs_7(&mut bytes, 20);
 //    println!("{:?}", String::from_utf8(bytes).unwrap());
 
-    one::aes_in_ecb_mode();
+    one::detect_aes_in_ecb_mode();
 }
