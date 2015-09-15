@@ -225,13 +225,18 @@ pub fn detect_aes_in_ecb_mode() {
     let file_string: String = open_file("assets/8.txt").unwrap();
     let ciphertexts: Vec<Vec<u8>> = file_string
                                 .split("\n")
-                                .map(|line| line.from_hex().unwrap())
+                                .map(|line| line.bytes().collect())
                                 .collect();
 
-    // can we fix this n^2 crap?
     for ciphertext in ciphertexts {
+        let mut cypher_counts: HashMap<&[u8], usize> = HashMap::new();
         for chunk in ciphertext.chunks(16) {
-            println!("{:?}", chunk);
+            if cypher_counts.contains_key(chunk) {
+                let current = cypher_counts.remove(chunk).unwrap();
+                cypher_counts.insert(chunk, current + 1);
+            } else {
+                cypher_counts.insert(chunk, 1);
+            }
         }
     }
 }
