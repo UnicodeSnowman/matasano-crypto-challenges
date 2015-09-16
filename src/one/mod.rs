@@ -228,17 +228,31 @@ pub fn detect_aes_in_ecb_mode() {
                                 .map(|line| line.bytes().collect())
                                 .collect();
 
-    for ciphertext in ciphertexts {
-        let mut cypher_counts: HashMap<&[u8], usize> = HashMap::new();
+    let init = (&Vec::new(), 0);
+    let (ecb_cipher, _) = ciphertexts.iter().fold(init, |acc, ref ciphertext| {
+        let mut cipher_counts: HashMap<&[u8], u8> = HashMap::new();
         for chunk in ciphertext.chunks(16) {
-            if cypher_counts.contains_key(chunk) {
-                let current = cypher_counts.remove(chunk).unwrap();
-                cypher_counts.insert(chunk, current + 1);
+            if cipher_counts.contains_key(chunk) {
+                if let Some(count) = cipher_counts.get_mut(chunk) {
+                    *count += 1;
+                }
             } else {
-                cypher_counts.insert(chunk, 1);
+                cipher_counts.insert(chunk, 0);
             }
         }
-    }
+        let counts: Vec<&u8> = cipher_counts.values().collect();
+        let total: u8 = counts.iter().fold(0, |sum, val| sum + *val);
+
+        let (_, current_max) = acc;
+
+        if total > current_max {
+            (ciphertext, total)
+        } else {
+            acc
+        }
+    });
+
+    println!("{:?}", ecb_cipher);
 }
 
 fn open_file(path: &str) -> io::Result<String> {
