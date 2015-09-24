@@ -9,10 +9,10 @@ use std::slice::Iter;
 use std::collections::HashMap;
 use std::io;
 use std::io::prelude::*;
-use std::fs::File;
 use self::break_repeating_key_xor::{compute_hamming_distance};
 use self::openssl::crypto::symm::Type::{AES_128_ECB};
 use self::openssl::crypto::symm::{decrypt};
+use ::shared::{open_file};
 
 #[test]
 fn test_convert_hex_to_base64() {
@@ -254,11 +254,3 @@ pub fn detect_aes_in_ecb_mode() {
 
     println!("{:?}", ecb_cipher);
 }
-
-fn open_file(path: &str) -> io::Result<String> {
-    let mut file_string = String::new();
-    let mut file = try!(File::open(path));
-    try!(file.read_to_string(&mut file_string));
-    Ok(file_string)
-}
-
