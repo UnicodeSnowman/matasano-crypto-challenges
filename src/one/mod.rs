@@ -11,7 +11,7 @@ use std::io;
 use std::io::prelude::*;
 use self::break_repeating_key_xor::{compute_hamming_distance};
 use self::openssl::crypto::symm::Type::{AES_128_ECB};
-use self::openssl::crypto::symm::{decrypt};
+use self::openssl::crypto::symm::{decrypt, encrypt};
 use ::shared::{open_file};
 
 #[test]

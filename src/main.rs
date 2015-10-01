@@ -31,5 +31,4 @@ fn main() {
 //    println!("{:?}", String::from_utf8(bytes).unwrap());
 
     two::cbc_mode();
-
 }
