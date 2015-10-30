@@ -36,7 +36,6 @@ fn encrypt_cbc() {
     let secret_message = "Bacon ipsum dolor amet short loin turkey tail, jowl drumstick spare ribs strip steak pastrami shank frankfurter brisket shoulder pork loin sausage. Frankfurter sausage corned beef swine. Corned beef chuck picanha kevin andouille, filet mignon sausage pig hamburger drumstick ribeye. Spare ribs kevin pork, pancetta short loin meatloaf bresaola frankfurter pork loin boudin. Sausage short loin ham hock, landjaeger tail rump jowl beef cupim spare ribs shoulder kielbasa. Beef ribs drumstick beef landjaeger turkey venison.  Andouille strip steak ham tail landjaeger flank short ribs chicken swine. Landjaeger pork belly ground round ham strip steak. Turducken ball tip beef corned beef fatback shank. Prosciutto hamburger spare ribs ribeye ham, fatback tenderloin chuck chicken shoulder andouille short ribs drumstick brisket.  Pastrami ground round beef ribs, porchetta picanha drumstick tri-tip pork tenderloin meatball bacon doner. Cupim hamburger jerky, chicken pig prosciutto pork loin tail ham. Beef jowl shoulder, beef ribs capicola turkey picanha fatback pork chop swine ground round. Short ribs bresaola biltong, porchetta leberkas bacon rump t-bone. Filet mignon boudin shankle venison, pork belly tenderloin shank meatball kielbasa pork loin chicken cow.  Cow boudin frankfurter corned beef chicken t-bone pork fatback flank porchetta rump chuck prosciutto short ribs pastrami. Picanha pork chop chicken tenderloin prosciutto drumstick boudin cow pancetta landjaeger ground round flank ham pork. Biltong rump jowl alcatra cow corned beef bresaola tongue jerky ground round tenderloin short loin salami. Boudin beef meatloaf hamburger pancetta strip steak. Kevin turkey meatball chuck, turducken pancetta brisket.  Fatback filet mignon meatloaf tri-tip turducken meatball tenderloin, bresaola shankle doner strip steak chuck. Ball tip kevin shankle fatback leberkas hamburger beef ribs. Brisket flank swine kevin, andouille hamburger frankfurter. Pork loin biltong landjaeger capicola. Sausage landjaeger kielbasa salami tri-tip flank beef.";
     let secret_message_bytes: Vec<u8> = secret_message.bytes().collect();
 
-    // can I flatten this somehow?
     let vecs: Vec<Vec<u8>> = secret_message_bytes.chunks(16).fold(vec!(iv), |acc, chunk| {
         if let Some(v) = acc.last() {
             let encrypted_chunk = encrypt(AES_128_ECB, &key, vec![0], chunk);
@@ -48,19 +47,24 @@ fn encrypt_cbc() {
         acc
     });
 
-//    let decrypted: Vec<u8> = vecs.iter().fold(vec!(iv2), |acc, chunk| {
-//        if let Some(v) = acc.last() {
-//            let result = xor(&chunk, &v);
-//            let decrypted_chunk = decrypt(AES_128_ECB, &key, vec![0], &result);
-//            let mut v_copy = acc.clone();
-//            v_copy.push(result);
-//            return v_copy;
-//        }
-//        acc
-//    });
-//
-//    //println!("{:?}", String::from_utf8(decrypted).unwrap());
-//    println!("{:?}", decrypted);
+
+    let decrypted: Vec<Vec<u8>> = vecs.into_iter().fold(vec!(), |acc, chunk| {
+        if let Some(v) = acc.last() {
+            let result = xor(&chunk, &v);
+            let decrypted_chunk = decrypt(AES_128_ECB, &key, vec![0], &result);
+            let mut v_copy = acc.clone();
+            v_copy.push(result);
+            return v_copy;
+        } else {
+            let mut v_copy = acc.clone();
+            v_copy.push(chunk);
+            return v_copy;
+        }
+    });
+
+    let flattened: Vec<u8> = decrypted.into_iter().flat_map(|a| a).collect();
+    //println!("{:?}", vecs);
+    println!("{:?}", String::from_utf8(flattened));
 }
 
 //fn encrypt_cbc() {
