@@ -31,5 +31,11 @@ fn main() {
 //    println!("{:?}", String::from_utf8(bytes).unwrap());
 
     let secret_message_bytes: Vec<u8> = "Bacon ipsum dolr amet short loin".bytes().collect();
-    two::an_ecb_cbc_detection_oracle::encryption_oracle(secret_message_bytes);
+    let result = two::an_ecb_cbc_detection_oracle::encryption_oracle(secret_message_bytes);
+
+//    let mode: two::an_ecb_cbc_detection_oracle::EncryptionType = match result {
+//        Some(result) => two::an_ecb_cbc_detection_oracle::detect_mode(result),
+//        None => two::an_ecb_cbc_detection_oracle
+//    }
+        
 }
