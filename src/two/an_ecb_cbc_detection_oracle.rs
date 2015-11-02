@@ -31,17 +31,18 @@ fn encrypt_cbc(data: &[u8]) -> Vec<u8> {
     let key = generate_random_aes_key();
     let iv: Vec<u8> = vec![0; 16];
  
-    let (encrypted, _): (Vec<Vec<u8>>, Vec<u8>) = data.chunks(16).fold((vec!(), iv), |acc, plaintext| {
-        let (ciphertexts, iv) = acc;
+    let (encrypted_result, _): (Vec<u8>, Vec<u8>) = data.chunks(16).fold((vec!(), iv), |acc, plaintext| {
+        let (encrypted_result, iv) = acc;
         let xored = xor(&plaintext, &iv);
         let ciphertext = encrypt(&xored, &key);
-        let mut ciphertexts_clone = ciphertexts.clone();
-        ciphertexts_clone.push(ciphertext.clone());
-        (ciphertexts_clone, ciphertext)
+        let mut encrypted_result_clone = encrypted_result.clone();
+        for byte in ciphertext.clone() {
+            encrypted_result_clone.push(byte);
+        }
+        (encrypted_result_clone, ciphertext)
     });
 
-    let flattened: Vec<u8> = encrypted.into_iter().flat_map(|a| a).collect();
-    flattened
+    encrypted_result
 }
 
 fn encrypt_ecb(data: &[u8]) -> Vec<u8> {
@@ -76,6 +77,14 @@ pub fn encryption_oracle(input: Vec<u8>) -> Option<Vec<u8>> {
     }
 }
 
+fn detect_ecb(data: &Vec<u8>) -> bool {
+    true
+}
+
 pub fn detect_mode(input: Vec<u8>) -> EncryptionType {
-    EncryptionType::CBC
+    if detect_ecb(&input) {
+        EncryptionType::ECB
+    } else {
+        EncryptionType::CBC
+    }
 }
