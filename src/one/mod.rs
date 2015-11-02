@@ -229,7 +229,7 @@ pub fn detect_aes_in_ecb_mode() {
                                 .collect();
 
     let init = (&Vec::new(), 0);
-    let (ecb_cipher, _) = ciphertexts.iter().fold(init, |acc, ref ciphertext| {
+    let (ecb_cipher, total) = ciphertexts.iter().fold(init, |acc, ref ciphertext| {
         let mut cipher_counts: HashMap<&[u8], u8> = HashMap::new();
         for chunk in ciphertext.chunks(16) {
             if cipher_counts.contains_key(chunk) {
@@ -252,5 +252,5 @@ pub fn detect_aes_in_ecb_mode() {
         }
     });
 
-    println!("{:?}", ecb_cipher);
+    println!("{:?}", total);
 }

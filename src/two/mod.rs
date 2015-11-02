@@ -1,11 +1,12 @@
 extern crate rustc_serialize as serialize;
 extern crate openssl;
 
+pub mod an_ecb_cbc_detection_oracle;
+
 use ::shared::{open_file};
-use self::serialize::hex::{ToHex, FromHex};
-use self::serialize::base64::{STANDARD, FromBase64, ToBase64};
+use self::serialize::base64::{FromBase64};
 use self::openssl::crypto::symm::Type::{AES_128_ECB};
-use self::openssl::crypto::symm::{Crypter, encrypt, decrypt};
+use self::openssl::crypto::symm::{Crypter};
 use self::openssl::crypto::symm::Mode::{Encrypt, Decrypt};
 use std::slice::Iter;
 use std::iter::Zip;
@@ -23,7 +24,7 @@ pub fn pad_pkcs_7(block: &mut Vec<u8>, block_size: u8) {
 }
 
 pub fn cbc_mode() {
-    encrypt_cbc();
+    decrypt_cbc();
 }
 
 fn xor(vec_a: &[u8], vec_b: &[u8]) -> Vec<u8> {
@@ -39,7 +40,7 @@ fn encrypt_plaintext(key: &Vec<u8>, plaintext: &[u8], v: &Vec<u8>) -> Vec<u8> {
     encrypter.update(&xored[..])
 }
 
-fn encrypt_cbc() {
+fn decrypt_cbc() {
     let key: Vec<u8> = "YELLOW SUBMARINE".bytes().collect();
     let iv: Vec<u8> = vec![0; 16];
     let iv2: [u8; 16] = [0; 16];
@@ -56,6 +57,8 @@ fn encrypt_cbc() {
             vec!(cipher_text)
         }
     });
+
+    println!("{:?}", encrypted);
 
     let file_string: String = open_file("assets/10.txt").unwrap();
     let file_bytes: Vec<u8> = file_string.from_base64().unwrap();

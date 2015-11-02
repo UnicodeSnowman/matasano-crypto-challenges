@@ -30,5 +30,6 @@ fn main() {
 //    two::pad_pkcs_7(&mut bytes, 20);
 //    println!("{:?}", String::from_utf8(bytes).unwrap());
 
-    two::cbc_mode();
+    let secret_message_bytes: Vec<u8> = "Bacon ipsum dolr amet short loin".bytes().collect();
+    two::an_ecb_cbc_detection_oracle::encryption_oracle(secret_message_bytes);
 }
