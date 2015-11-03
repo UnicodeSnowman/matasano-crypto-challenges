@@ -1,5 +1,6 @@
 extern crate openssl;
 extern crate rand;
+use std::collections::HashMap;
 use self::openssl::crypto::symm::Type::{AES_128_ECB};
 use self::openssl::crypto::symm::{Crypter};
 use self::openssl::crypto::symm::Mode::{Encrypt, Decrypt};
@@ -77,8 +78,20 @@ pub fn encryption_oracle(input: Vec<u8>) -> Option<Vec<u8>> {
     }
 }
 
-fn detect_ecb(data: &Vec<u8>) -> bool {
-    true
+fn detect_ecb(ciphertext: &Vec<u8>) -> bool {
+    let mut cipher_counts: HashMap<&[u8], u8> = HashMap::new();
+    for chunk in ciphertext.chunks(16) {
+        if cipher_counts.contains_key(chunk) {
+            if let Some(count) = cipher_counts.get_mut(chunk) {
+                *count += 1;
+            }
+        } else {
+            cipher_counts.insert(chunk, 0);
+        }
+    }
+    let counts: Vec<&u8> = cipher_counts.values().collect();
+    let total: u8 = counts.iter().fold(0, |sum, val| sum + *val);
+    total > 1
 }
 
 pub fn detect_mode(input: Vec<u8>) -> EncryptionType {
