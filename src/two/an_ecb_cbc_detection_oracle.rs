@@ -1,13 +1,10 @@
 extern crate openssl;
 extern crate rand;
-use std::collections::HashMap;
 use self::openssl::crypto::symm::Type::{AES_128_ECB};
 use self::openssl::crypto::symm::{Crypter};
-use self::openssl::crypto::symm::Mode::{Encrypt, Decrypt};
+use self::openssl::crypto::symm::Mode::{Encrypt};
 use self::openssl::crypto::rand::{rand_bytes};
 use self::rand::Rng;
-use std::iter::Zip;
-use std::slice::Iter;
 use ::shared::{detect_ecb, xor};
 
 pub enum EncryptionType { CBC, ECB }
