@@ -8,6 +8,7 @@ use self::openssl::crypto::rand::{rand_bytes};
 use self::rand::Rng;
 use std::iter::Zip;
 use std::slice::Iter;
+use ::shared::{detect_ecb, xor};
 
 pub enum EncryptionType { CBC, ECB }
 
@@ -15,11 +16,6 @@ pub enum EncryptionType { CBC, ECB }
 // that's just 16 random bytes.'
 pub fn generate_random_aes_key() -> Vec<u8> {
     rand_bytes(16)
-}
-
-fn xor(vec_a: &[u8], vec_b: &[u8]) -> Vec<u8> {
-    let zipped: Zip<Iter<u8>, Iter<u8>> = vec_a.iter().zip(vec_b.iter());
-    zipped.map(|(&a, &b)| a^b).collect()
 }
 
 fn append(data: &mut Vec<u8>, append: Vec<u8>) {
@@ -76,22 +72,6 @@ pub fn encryption_oracle(input: Vec<u8>) -> Option<Vec<u8>> {
         1 => Some(encrypt_ecb(&data)),
         _ => None
     }
-}
-
-fn detect_ecb(ciphertext: &Vec<u8>) -> bool {
-    let mut cipher_counts: HashMap<&[u8], u8> = HashMap::new();
-    for chunk in ciphertext.chunks(16) {
-        if cipher_counts.contains_key(chunk) {
-            if let Some(count) = cipher_counts.get_mut(chunk) {
-                *count += 1;
-            }
-        } else {
-            cipher_counts.insert(chunk, 0);
-        }
-    }
-    let counts: Vec<&u8> = cipher_counts.values().collect();
-    let total: u8 = counts.iter().fold(0, |sum, val| sum + *val);
-    total > 1
 }
 
 pub fn detect_mode(input: Vec<u8>) -> EncryptionType {
