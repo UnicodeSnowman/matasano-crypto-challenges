@@ -31,11 +31,14 @@ pub fn encryption_oracle(input: &Vec<u8>) -> Vec<u8> {
     let mut data: Vec<u8> = vec!();
     let input_copy = input.clone();
 
-    let unknown_base64_string = UNKNOWN_STRING.from_base64().unwrap();
-
-    append(&mut data, input_copy);
-    append(&mut data, unknown_base64_string);
-    encrypt(&data, &consistent_key)
+    match UNKNOWN_STRING.from_base64() {
+        Ok(unknown_base64_bytes) => {
+            append(&mut data, input_copy);
+            append(&mut data, unknown_base64_bytes);
+            encrypt(&data, &consistent_key)
+        },
+        Err(_) => vec!()
+    }
 }
 
 fn gen_n_bytes(n: usize) -> Vec<u8> {
@@ -66,38 +69,43 @@ pub fn main(msg: &Vec<u8>) {
     let mut results: Vec<u8> = vec!();
 
     if is_ecb {
-        let mut results_map: HashMap<Vec<u8>, Vec<u8>> = HashMap::new();
+        let n = encryption_oracle(&vec!()).len();
 
-        for s in (1..blocksize - 1) {
-            let mut ciphertext = encryption_oracle(&gen_n_bytes(blocksize - s));
-            ciphertext.truncate(16);
+        for s in (1..n) {
+            let mut results_map: HashMap<Vec<u8>, Vec<u8>> = HashMap::new();
+            let mut ciphertext = encryption_oracle(&gen_n_bytes(n - s));
+            ciphertext.truncate(n);
 
             for i in 0..255 {
                 let byte = i as u8;
-                let mut vec = gen_n_bytes(blocksize - s);
-                // stick our results from previous iterations
-                // on our vector
+                let mut vec = gen_n_bytes(n - s);
+
+                // push our results from previous iterations
+                // onto our vector
                 for b in results.clone() {
                     vec.push(b);
                 }
                 vec.push(byte);
+
                 let mut ctext = encryption_oracle(&vec);
-                ctext.truncate(16);
+                ctext.truncate(n);
                 results_map.insert(ctext, vec);
             }
 
-            let answer = results_map.get(&ciphertext);
-            match answer {
+            match results_map.get(&ciphertext) {
                 Some(vec) => { 
                     if let Some(value) = vec.last() {
                         results.push(*value);
                     }
                 },
-                None => println!("{:?}", "Not Found")
+                None => {
+                    println!("{:?}", "Not Found");
+                }
             }
         }
 
-        println!("{:?}", results);
+        let result_string = String::from_utf8(results);
+        println!("{:?}", result_string);
     }
 }
 
