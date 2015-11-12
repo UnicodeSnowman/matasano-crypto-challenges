@@ -97,7 +97,9 @@ pub fn main(msg: &Vec<u8>) {
             }
         }
 
-        println!("{:?}", results);
+        let result_string = String::from_utf8(results);
+        println!("{:?}", result_string);
+
     }
 }
 
