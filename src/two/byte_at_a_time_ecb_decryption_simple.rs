@@ -12,6 +12,7 @@ static UNKNOWN_STRING: &'static str = "Um9sbGluJyBpbiBteSA1LjAKV2l0aCBteSByYWctd
 aGFpciBjYW4gYmxvdwpUaGUgZ2lybGllcyBvbiBzdGFuZGJ5IHdhdmluZyBq
 dXN0IHRvIHNheSBoaQpEaWQgeW91IHN0b3A/IE5vLCBJIGp1c3QgZHJvdmUg
 YnkK";
+//static UNKNOWN_STRING: &'static str = "Y2hlY2sgb3V0IHRoaXMgc2VjcmV0IG1lc3NhZ2UgdGU=";
 
 fn encrypt(data: &[u8], key: &Vec<u8>) -> Vec<u8> {
     let encrypter = Crypter::new(AES_128_ECB);
@@ -71,7 +72,7 @@ pub fn main(msg: &Vec<u8>) {
     if is_ecb {
         let n = encryption_oracle(&vec!()).len();
 
-        for s in (1..n) {
+        for s in (1..n + 1) {
             let mut results_map: HashMap<Vec<u8>, Vec<u8>> = HashMap::new();
             let mut ciphertext = encryption_oracle(&gen_n_bytes(n - s));
             ciphertext.truncate(n);
