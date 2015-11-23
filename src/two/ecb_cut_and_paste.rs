@@ -1,27 +1,39 @@
+extern crate openssl;
+extern crate rand;
 use std::collections::HashMap;
+use self::openssl::crypto::rand::{rand_bytes};
+use self::openssl::crypto::symm::Type::{AES_128_ECB};
+use self::openssl::crypto::symm::{Crypter};
+use self::openssl::crypto::symm::Mode::{Encrypt};
+use self::rand::Rng;
 
-pub fn profile_for(email_str: &str) {
-    let mut key_value_pairs: HashMap<&str, &str> = HashMap::new();
+pub fn random_aes_key() -> Vec<u8> {
+    rand_bytes(16)
+}
+
+pub fn encrypt_ecb(data: &[u8]) -> Vec<u8> {
+    let key = vec!(110, 203, 52, 7, 87, 32, 203, 144, 10, 157, 241, 177, 0, 95, 189, 94);
+    encrypt(data, &key)
+}
+
+fn encrypt(data: &[u8], key: &Vec<u8>) -> Vec<u8> {
+    let encrypter = Crypter::new(AES_128_ECB);
+    encrypter.init(Encrypt, key, &vec![0]);
+    encrypter.pad(false);
+    encrypter.update(&data)
+}
+
+pub fn profile_for(email_str: &str) -> String {
     let mut encoded_string = String::new();
-    key_value_pairs.insert("email", email_str);
-    key_value_pairs.insert("uid", "10");
-    key_value_pairs.insert("role", "user");
+    let mut rng = rand::thread_rng();
+    let uid: u32 = rng.gen_range(1, 1000);
 
-    for (key, value) in key_value_pairs {
-        let key_value_pair: String = vec!(key, value).join("=");
-
-        // FIXME these two if statements blow. there's gotta
-        // be a way to do this with join, but the type/borrow check
-        // is giving me hell. more later...
-        if encoded_string.len() > 0 {
-            encoded_string.push_str(&"&");
-        }
-
-        if key_value_pair.len() > 0 {
-            encoded_string.push_str(&key_value_pair);
-        }
-    }
-    println!("{:?}", encoded_string);
+    encoded_string.push_str("email=");
+    encoded_string.push_str(&email_str); // TODO encode '&' and '=' chars
+    encoded_string.push_str("&uid=10");
+    //encoded_string.push_str(&uid.to_string());
+    encoded_string.push_str("&role=user");
+    encoded_string
 }
 
 pub fn k_equals_v_parse(string: &str) -> HashMap<&str, &str> {
@@ -39,6 +51,6 @@ pub fn k_equals_v_parse(string: &str) -> HashMap<&str, &str> {
 //        }
     }
 
-    println!("{:?}", key_value_pairs);
     key_value_pairs
 }
+
