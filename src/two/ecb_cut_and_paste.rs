@@ -4,7 +4,7 @@ use std::collections::HashMap;
 use self::openssl::crypto::rand::{rand_bytes};
 use self::openssl::crypto::symm::Type::{AES_128_ECB};
 use self::openssl::crypto::symm::{Crypter};
-use self::openssl::crypto::symm::Mode::{Encrypt};
+use self::openssl::crypto::symm::Mode::{Decrypt,Encrypt};
 use self::rand::Rng;
 
 pub fn random_aes_key() -> Vec<u8> {
@@ -16,11 +16,23 @@ pub fn encrypt_ecb(data: &[u8]) -> Vec<u8> {
     encrypt(data, &key)
 }
 
+pub fn decrypt_ecb(data: &[u8]) -> Vec<u8> {
+    let key = vec!(110, 203, 52, 7, 87, 32, 203, 144, 10, 157, 241, 177, 0, 95, 189, 94);
+    decrypt(data, &key)
+}
+
 fn encrypt(data: &[u8], key: &Vec<u8>) -> Vec<u8> {
     let encrypter = Crypter::new(AES_128_ECB);
     encrypter.init(Encrypt, key, &vec![0]);
     encrypter.pad(false);
     encrypter.update(&data)
+}
+
+fn decrypt(data: &[u8], key: &Vec<u8>) -> Vec<u8> {
+    let decrypter = Crypter::new(AES_128_ECB);
+    decrypter.init(Decrypt, key, &vec![0]);
+    decrypter.pad(false);
+    decrypter.update(&data)
 }
 
 pub fn profile_for(email_str: &str) -> String {
@@ -30,8 +42,9 @@ pub fn profile_for(email_str: &str) -> String {
 
     encoded_string.push_str("email=");
     encoded_string.push_str(&email_str); // TODO encode '&' and '=' chars
-    encoded_string.push_str("&uid=10");
+    encoded_string.push_str("&uid=");
     //encoded_string.push_str(&uid.to_string());
+    encoded_string.push_str("10");
     encoded_string.push_str("&role=user");
     encoded_string
 }

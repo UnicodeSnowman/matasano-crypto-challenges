@@ -3,6 +3,41 @@ extern crate matasano;
 //use matasano::one;
 use matasano::two;
 
+fn get_encrypted_bytes_for_string(string: &str) -> Vec<u8> {
+    let mut bytes: Vec<u8> = vec!();
+
+    for c in string.chars() {
+        let profile = two::ecb_cut_and_paste::profile_for("AAAAAAAAAA");
+        let chars = "AAAAAAAAA".to_string() + &c.to_string();
+        let char_profile = two::ecb_cut_and_paste::profile_for(&chars);
+        let profile_bytes: Vec<u8> = profile.bytes().collect();
+        let char_profile_bytes: Vec<u8> = char_profile.bytes().collect();
+
+        let test_profile = two::ecb_cut_and_paste::profile_for("cap@gmail.com");
+        let test_bytes: Vec<u8> = test_profile.bytes().collect();
+        //let encrypted_profile = two::ecb_cut_and_paste::encrypt_ecb(&profile_bytes);
+        let encrypted_profile = two::ecb_cut_and_paste::encrypt_ecb(&test_bytes);
+        //let admin_encrypted_profile = two::ecb_cut_and_paste::encrypt_ecb(&char_profile_bytes);
+
+        println!("1 {:?}", test_bytes);
+        println!("encrypted {:?}", encrypted_profile);
+        let result = two::ecb_cut_and_paste::decrypt_ecb(&encrypted_profile);
+        println!("decrypted {:?}", result);
+
+//        let mut admin_string_bytes: Vec<u8> = vec!();
+//        for pair in encrypted_profile.into_iter().zip(admin_encrypted_profile) {
+//            let (profile_char, admin_char) = pair;
+//            if profile_char != admin_char {
+//                admin_string_bytes.push(admin_char);
+//            }
+//        }
+//
+//        let last_byte = admin_string_bytes.into_iter().last().unwrap();
+//        bytes.push(last_byte);
+    }
+    bytes
+}
+
 fn main() {
     println!("{}", "Section One");
     println!("{}", "================");
@@ -46,16 +81,30 @@ fn main() {
     //let email_str = "email=foo@bar.com&uid=10&role=user";
     //let test_str = "foo=bar&baz=qux&zap=zazzle";
     //two::ecb_cut_and_paste::k_equals_v_parse(email_str);
-    let profile = two::ecb_cut_and_paste::profile_for("foooo@bar.com");
-    let admin_profile = two::ecb_cut_and_paste::profile_for("admin@bar.com");
+    let test_profile = two::ecb_cut_and_paste::profile_for("capli@cap.admin\0\0\0\0\0\0\0\0\0\0\0com");
+    let test_bytes: Vec<u8> = test_profile.bytes().collect();
+    //let encrypted_profile = two::ecb_cut_and_paste::encrypt_ecb(&profile_bytes);
+    let encrypted_profile = two::ecb_cut_and_paste::encrypt_ecb(&test_bytes);
+    //let admin_encrypted_profile = two::ecb_cut_and_paste::encrypt_ecb(&char_profile_bytes);
 
-    let profile_bytes: Vec<u8> = profile.bytes().collect();
-    let admin_profile_bytes: Vec<u8> = admin_profile.bytes().collect();
+    println!("encrypted {:?}", encrypted_profile);
 
-    let encrypted_profile = two::ecb_cut_and_paste::encrypt_ecb(&profile_bytes);
-    let admin_encrypted_profile = two::ecb_cut_and_paste::encrypt_ecb(&admin_profile_bytes);
-    println!("{:?}", encrypted_profile);
-    println!("{:?}", admin_encrypted_profile);
+    let mut result_vec: Vec<u8> = vec!();
+    for b in &encrypted_profile[0..16] {
+        result_vec.push(*b);
+    }
+
+    for b in &encrypted_profile[32..48] {
+        result_vec.push(*b);
+    }
+
+    for b in &encrypted_profile[16..32] {
+        result_vec.push(*b);
+    }
+
+    let result = two::ecb_cut_and_paste::decrypt_ecb(&result_vec);
+    println!("profile {:?}", String::from_utf8(result).unwrap());
+
     // send in profile_for("foo@bar.com"), compare it to profile_for("admin"),
     // "copy" the differing bytes to get the ciphertext version of "admin"
     // send in profile_for("role"), try to find matching bytes for that too,
