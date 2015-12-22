@@ -4,6 +4,7 @@ extern crate openssl;
 pub mod an_ecb_cbc_detection_oracle;
 pub mod byte_at_a_time_ecb_decryption_simple;
 pub mod ecb_cut_and_paste;
+pub mod byte_at_a_time_ecb_decryption_harder;
 
 use ::shared::{open_file};
 use self::serialize::base64::{FromBase64};
